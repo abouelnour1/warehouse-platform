@@ -1,0 +1,1 @@
+-- Seed data is handled by versioned migrations for this project.

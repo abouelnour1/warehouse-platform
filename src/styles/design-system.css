@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap');
+
+:root {
+  color-scheme: light;
+
+  --color-teal: #006a60;
+  --color-teal-700: #00564e;
+  --color-teal-50: #e5f2f0;
+  --color-gold: #e0a84a;
+  --color-gold-700: #b98223;
+  --color-gold-50: #fbf2df;
+  --color-paper: #f7f9f6;
+  --color-surface: #ffffff;
+  --color-border: #dfe7e3;
+  --color-text: #18231f;
+  --color-muted: #66746f;
+  --color-danger: #b42318;
+  --color-success: #087443;
+
+  --font-arabic: 'Cairo', 'Tajawal', 'Segoe UI', Tahoma, Arial, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --shadow-card: 0 12px 30px rgb(24 35 31 / 8%);
+  --transition-base: 180ms ease;
+}

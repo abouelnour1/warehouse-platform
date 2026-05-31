@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(not exist *)",
+      "Bash(node *)",
+      "Bash(timeout 8 npm run dev)",
+      "Bash(npm run *)",
+      "Bash(npx cap *)",
+      "Bash(adb uninstall *)",
+      "Bash(.\\\\gradlew assembleDebug)",
+      "PowerShell(java *)",
+      "PowerShell($env:JAVA_HOME; $env:ANDROID_HOME; $env:ANDROID_SDK_ROOT)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-25.0.2.10-hotspot\"; Set-Location \"D:\\\\worehouse\\\\android\"; .\\\\gradlew assembleDebug 2>&1)",
+      "PowerShell(adb install *)",
+      "PowerShell(adb shell *)",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-25.0.2.10-hotspot\"; Set-Location \"D:\\\\worehouse\\\\android\"; .\\\\gradlew assembleDebug 2>&1 | Select-String -Pattern \"BUILD|FAILED|ERROR|error\" | Select-Object -Last 5)",
+      "PowerShell(adb *)",
+      "PowerShell(adb logcat -d --pid=$\\(adb shell pidof com.pharmacyordering.platform\\) 2>&1 | Select-String -Pattern \"SIGNUP|Supabase|supabase|fetch|network|error|Error|CORS|SSL|certificate|chromium|connect|Failed\" | Select-Object -First 60)",
+      "PowerShell($url = \"https://ygjsabbcaezyi.supabase.co/auth/v1/health\"; try { $r = Invoke-WebRequest -Uri $url -TimeoutSec 10 -UseBasicParsing; \"STATUS: $\\($r.StatusCode\\)`nBODY: $\\($r.Content\\)\" } catch { \"ERROR: $_\" })",
+      "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-25.0.2.10-hotspot\"; Set-Location \"D:\\\\worehouse\\\\android\"; .\\\\gradlew assembleDebug 2>&1 | Select-String -Pattern \"BUILD|FAILED|error:\" | Select-Object -Last 3)",
+      "Bash(Get-ChildItem -Path \"D:\\\\worehouse\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
