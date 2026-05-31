@@ -138,7 +138,7 @@ export async function loadPharmacyOrders(pharmacyId: string): Promise<TrackedOrd
         subtotal,
         cancel_reason,
         updated_at,
-        warehouses:warehouse_id(warehouse_name),
+        warehouses:warehouses!sub_orders_warehouse_id_fkey(warehouse_name),
         order_items(id, product_name, warehouse_name, unit_price, discount_pct, quantity, line_total)
       )
     `)
@@ -169,7 +169,7 @@ export async function loadIncomingSubOrders(warehouseId: string): Promise<Incomi
       subtotal,
       cancel_reason,
       updated_at,
-      warehouses:warehouse_id(warehouse_name),
+      warehouses:warehouses!sub_orders_warehouse_id_fkey(warehouse_name),
       orders:parent_order_id(order_code, created_at),
       order_items(id, product_name, warehouse_name, unit_price, discount_pct, quantity, line_total)
     `)

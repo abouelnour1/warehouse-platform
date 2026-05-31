@@ -60,7 +60,7 @@ export interface AdminStats {
 export async function loadPendingWarehouses(): Promise<PendingWarehouse[]> {
   const { data, error } = await supabase
     .from('warehouses')
-    .select('id, warehouse_name, status, min_order_value, delivery_areas, profiles:id(full_name, phone)')
+    .select('id, warehouse_name, status, min_order_value, delivery_areas, profiles:profiles!warehouses_id_fkey(full_name, phone)')
     .eq('status', 'pending')
     .eq('is_deleted', false)
     .order('warehouse_name')
@@ -82,7 +82,7 @@ export async function setWarehouseStatus(warehouseId: string, status: 'active' |
 export async function loadCommissionConfig(): Promise<CommissionConfigRow[]> {
   const { data, error } = await supabase
     .from('commission_config')
-    .select('id, warehouse_id, commission_pct, active, warehouses:warehouse_id(warehouse_name)')
+    .select('id, warehouse_id, commission_pct, active, warehouses:warehouses!commission_config_warehouse_id_fkey(warehouse_name)')
     .eq('active', true)
     .order('warehouse_id', { ascending: true, nullsFirst: true })
     .returns<CommissionConfigRow[]>()
@@ -147,7 +147,7 @@ export async function mergeProducts(sourceProductId: string, targetProductId: st
 export async function loadMatchMetrics(): Promise<MatchMetricRow[]> {
   const { data, error } = await supabase
     .from('match_metrics')
-    .select('id, warehouse_id, import_batch_id, auto_count, review_count, new_count, corrected_count, created_at, warehouses:warehouse_id(warehouse_name)')
+    .select('id, warehouse_id, import_batch_id, auto_count, review_count, new_count, corrected_count, created_at, warehouses:warehouses!match_metrics_warehouse_id_fkey(warehouse_name)')
     .order('created_at', { ascending: false })
     .limit(30)
     .returns<MatchMetricRow[]>()

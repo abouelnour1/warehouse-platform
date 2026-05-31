@@ -110,7 +110,7 @@ export async function loadCartItems(pharmacyId: string): Promise<CartItem[]> {
         stock,
         is_available,
         products:product_id(canonical_name),
-        warehouses:warehouse_id(id, warehouse_name, min_order_value)
+        warehouses:warehouses!offers_warehouse_id_fkey(id, warehouse_name, min_order_value)
       )
     `)
     .eq('pharmacy_id', pharmacyId)
