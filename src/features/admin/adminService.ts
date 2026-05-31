@@ -28,13 +28,29 @@ export interface AdminWarehouseOption {
   status: string
 }
 
+export interface AdminWarehouse {
+  id: string
+  warehouse_name: string
+  status: 'pending' | 'active' | 'suspended'
+  min_order_value: number
+  delivery_areas: string[]
+  profiles: {
+    full_name: string
+    phone: string | null
+    created_at: string
+  } | null
+}
+
 export interface AdminProduct {
   id: string
   product_code: string
   canonical_name: string
   normalized_key: string
+  strength: string | null
+  form: string | null
   is_verified: boolean
   is_deleted: boolean
+  offers: Array<{ count: number }>
 }
 
 export interface MatchMetricRow {
@@ -112,10 +128,28 @@ export async function loadWarehouseOptions(): Promise<AdminWarehouseOption[]> {
   return data ?? []
 }
 
+export async function loadAdminWarehouses(): Promise<AdminWarehouse[]> {
+  const { data, error } = await supabase
+    .from('warehouses')
+    .select('id, warehouse_name, status, min_order_value, delivery_areas, profiles:profiles!warehouses_id_fkey(full_name, phone, created_at)')
+    .eq('is_deleted', false)
+    .order('status')
+    .order('warehouse_name')
+    .returns<AdminWarehouse[]>()
+
+  if (error) throw error
+
+  const priority = { pending: 0, active: 1, suspended: 2 }
+  return (data ?? []).sort((left, right) =>
+    priority[left.status] - priority[right.status]
+    || left.warehouse_name.localeCompare(right.warehouse_name, 'ar'),
+  )
+}
+
 export async function loadProducts(): Promise<AdminProduct[]> {
   const { data, error } = await supabase
     .from('products')
-    .select('id, product_code, canonical_name, normalized_key, is_verified, is_deleted')
+    .select('id, product_code, canonical_name, normalized_key, strength, form, is_verified, is_deleted, offers:offers!offers_product_id_fkey(count)')
     .eq('is_deleted', false)
     .order('created_at', { ascending: false })
     .limit(100)

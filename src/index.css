@@ -919,6 +919,87 @@ button {
   gap: var(--space-2-5);
 }
 
+.admin-table-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-warehouse-card {
+  align-items: center;
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: minmax(180px, 1fr) minmax(140px, auto) auto minmax(160px, auto);
+}
+
+.admin-cell-label {
+  color: var(--color-muted);
+  display: block;
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-1);
+}
+
+.admin-warehouse-card p,
+.admin-product-card p {
+  color: var(--color-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.admin-product-card {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.admin-product-summary,
+.admin-product-meta,
+.admin-product-actions,
+.admin-product-merge {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.admin-product-summary {
+  justify-content: space-between;
+}
+
+.admin-product-actions {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.admin-product-actions .field {
+  flex: 1 1 220px;
+}
+
+.admin-product-merge {
+  background: var(--color-paper);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+}
+
+.admin-product-merge label {
+  display: grid;
+  flex: 1 1 280px;
+  gap: var(--space-2);
+}
+
+.admin-product-merge span {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.admin-product-merge select {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  min-height: 42px;
+  padding: var(--space-2) var(--space-2-5);
+  width: 100%;
+}
+
 .admin-row,
 .catalog-row,
 .metric-row {
@@ -1228,6 +1309,7 @@ button {
   .cart-item-row,
   .sub-order-track,
   .admin-row,
+  .admin-warehouse-card,
   .catalog-row,
   .metric-row,
   .commission-form,
