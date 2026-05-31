@@ -147,6 +147,22 @@ function errorResponse(error: string, message: string, status = 400): Response {
   return jsonResponse({ error, message }, status);
 }
 
+function serializeError(error: unknown) {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  try {
+    return JSON.parse(JSON.stringify(error));
+  } catch {
+    return String(error);
+  }
+}
+
 function normalizeArabicLetters(s: string): string {
   return s
     .replace(/[\u0623\u0625\u0622\u0671]/g, "ا")
@@ -743,12 +759,12 @@ serve(async (req) => {
 
     return await importPrices(req, client, warehouseId);
   } catch (error) {
-    console.error("IMPORT_FAILED", error);
-    console.error("IMPORT_FAILED_STACK", error instanceof Error ? error.stack : null);
+    console.error("IMPORT_FAILED_RAW", error);
+    console.error("IMPORT_FAILED_SERIALIZED", serializeError(error));
     return jsonResponse({
       error: "IMPORT_FAILED",
       message: "Import failed.",
-      details: error instanceof Error ? error.message : String(error),
+      details: serializeError(error),
     }, 400);
   }
 });
