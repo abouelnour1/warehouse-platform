@@ -143,6 +143,10 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+function errorResponse(error: string, message: string, status = 400): Response {
+  return jsonResponse({ error, message }, status);
+}
+
 function normalizeArabicLetters(s: string): string {
   return s
     .replace(/[\u0623\u0625\u0622\u0671]/g, "ا")
@@ -523,20 +527,20 @@ async function createProduct(
 async function importPrices(req: Request, client: ReturnType<typeof createClient>, warehouseId: string): Promise<Response> {
   const formData = await req.formData();
   const file = formData.get("file");
-  if (!(file instanceof File)) return jsonResponse({ error: "Excel file is required." }, 400);
+  if (!(file instanceof File)) return errorResponse("MISSING_FILE", "Expected file field named 'file'");
 
   const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
   const firstSheet = workbook.SheetNames[0];
-  if (!firstSheet) return jsonResponse({ error: "Workbook has no sheets." }, 400);
+  if (!firstSheet) return errorResponse("EMPTY_WORKBOOK", "Workbook has no sheets.");
 
   const rows = XLSX.utils.sheet_to_json<unknown[]>(workbook.Sheets[firstSheet], { header: 1, defval: "" });
   const headerIndex = rows.findIndex((row) => row.some((cell) => toText(cell)));
-  if (headerIndex < 0) return jsonResponse({ error: "No header row found." }, 400);
+  if (headerIndex < 0) return errorResponse("MISSING_HEADER_ROW", "No header row found.");
 
   const header = rows[headerIndex].map((cell) => toText(cell));
   const { mapping } = detectColumns(header);
   if (mapping.name === undefined || mapping.price === undefined) {
-    return jsonResponse({ error: "Could not detect required name and price columns.", mapping }, 400);
+    return jsonResponse({ error: "MISSING_REQUIRED_COLUMNS", message: "Could not detect required name and price columns.", mapping }, 400);
   }
 
   const { data: products, error: productError } = await client
@@ -719,11 +723,11 @@ async function handleReviewAction(req: Request, client: ReturnType<typeof create
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed." }, 405);
+  if (req.method !== "POST") return errorResponse("METHOD_NOT_ALLOWED", "Method not allowed.", 405);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !serviceRoleKey) return jsonResponse({ error: "Function is not configured." }, 500);
+  if (!supabaseUrl || !serviceRoleKey) return errorResponse("FUNCTION_NOT_CONFIGURED", "Function is not configured.", 500);
 
   const client = createClient(supabaseUrl, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -739,6 +743,6 @@ serve(async (req) => {
 
     return await importPrices(req, client, warehouseId);
   } catch (error) {
-    return jsonResponse({ error: error instanceof Error ? error.message : "Import failed." }, 400);
+    return errorResponse("IMPORT_FAILED", error instanceof Error ? error.message : "Import failed.");
   }
 });

@@ -1,3 +1,5 @@
+import { FunctionsHttpError } from '@supabase/supabase-js'
+
 import { supabase } from '../../lib/supabase'
 
 export interface ImportSummary {
@@ -39,15 +41,41 @@ export interface WarehouseOffer {
   } | null
 }
 
+const IMPORT_PRICES_FUNCTION = 'import-prices'
+const IMPORT_PRICES_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${IMPORT_PRICES_FUNCTION}`
+
+async function throwInvokeError(error: unknown): Promise<never> {
+  if (error instanceof FunctionsHttpError) {
+    const response = error.context
+    const body = await response.text()
+    const details = {
+      error,
+      response: {
+        url: response.url,
+        status: response.status,
+        statusText: response.statusText,
+        body,
+      },
+    }
+
+    console.error('import-prices invoke failed', details)
+    throw new Error(`${IMPORT_PRICES_FUNCTION} invoke failed at ${response.url} (${response.status} ${response.statusText}): ${body}`)
+  }
+
+  console.error('import-prices invoke failed', { error, url: IMPORT_PRICES_FUNCTION_URL })
+  const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error)
+  throw new Error(`${IMPORT_PRICES_FUNCTION} invoke failed at ${IMPORT_PRICES_FUNCTION_URL}: ${message}`)
+}
+
 export async function importPriceFile(file: File): Promise<ImportResult> {
   const formData = new FormData()
   formData.append('file', file)
 
-  const { data, error } = await supabase.functions.invoke<ImportResult>('import-prices', {
+  const { data, error } = await supabase.functions.invoke<ImportResult>(IMPORT_PRICES_FUNCTION, {
     body: formData,
   })
 
-  if (error) throw error
+  if (error) return throwInvokeError(error)
   if (!data) throw new Error('لم يتم إرجاع نتيجة من الخادم.')
   return data
 }
@@ -65,11 +93,11 @@ export async function listPendingReviews(): Promise<ReviewQueueItem[]> {
 }
 
 export async function resolveReview(reviewId: string, action: 'same' | 'new' | 'ignore', productId?: string): Promise<void> {
-  const { error } = await supabase.functions.invoke('import-prices', {
+  const { error } = await supabase.functions.invoke(IMPORT_PRICES_FUNCTION, {
     body: { action, reviewId, productId },
   })
 
-  if (error) throw error
+  if (error) return throwInvokeError(error)
 }
 
 export async function listWarehouseOffers(): Promise<WarehouseOffer[]> {
@@ -98,7 +126,7 @@ export async function updateWarehouseOffer(offerId: string, price: number, stock
 }
 
 export async function manualAddOffer(rawName: string, price: number, stock: number, barcode: string): Promise<void> {
-  const { error } = await supabase.functions.invoke('import-prices', {
+  const { error } = await supabase.functions.invoke(IMPORT_PRICES_FUNCTION, {
     body: {
       action: 'manualAdd',
       rawName,
@@ -108,5 +136,5 @@ export async function manualAddOffer(rawName: string, price: number, stock: numb
     },
   })
 
-  if (error) throw error
+  if (error) return throwInvokeError(error)
 }
