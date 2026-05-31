@@ -743,6 +743,12 @@ serve(async (req) => {
 
     return await importPrices(req, client, warehouseId);
   } catch (error) {
-    return errorResponse("IMPORT_FAILED", error instanceof Error ? error.message : "Import failed.");
+    console.error("IMPORT_FAILED", error);
+    console.error("IMPORT_FAILED_STACK", error instanceof Error ? error.stack : null);
+    return jsonResponse({
+      error: "IMPORT_FAILED",
+      message: "Import failed.",
+      details: error instanceof Error ? error.message : String(error),
+    }, 400);
   }
 });
