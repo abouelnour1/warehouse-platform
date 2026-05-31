@@ -109,7 +109,6 @@ export class SupabaseSearchProvider implements SearchProvider {
       .select('id, product_id, warehouse_id, warehouse_raw_name, price, discount_pct, stock, is_available, updated_at, warehouses:warehouses!offers_warehouse_id_fkey(warehouse_name, last_price_update)')
       .in('product_id', productIds)
       .eq('is_deleted', false)
-      .eq('is_available', true)
       .returns<OfferRow[]>()
 
     if (error) throw error

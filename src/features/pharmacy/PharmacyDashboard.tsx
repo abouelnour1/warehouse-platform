@@ -1,5 +1,5 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { Clock3, PackagePlus, Search, ShoppingCart, Star } from 'lucide-react'
+import { Clock3, Eye, PackagePlus, Search, ShoppingCart, Star } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { Button, Card } from '../../components'
@@ -45,13 +45,18 @@ export function PharmacyDashboard() {
   const [results, setResults] = useState<ProductResult[]>([])
   const [quickProducts, setQuickProducts] = useState<ProductResult[]>([])
   const [quickIds, setQuickIds] = useState<Set<string>>(new Set())
+  const [openedQuickProductId, setOpenedQuickProductId] = useState<string | null>(null)
   const [quantities, setQuantities] = useState<QuantityDrafts>({})
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const parentRef = useRef<HTMLDivElement | null>(null)
 
-  const visibleProducts = query.trim().length >= 2 ? results : quickProducts
+  const visibleProducts = query.trim().length >= 2
+    ? results
+    : openedQuickProductId
+      ? quickProducts.filter((product) => product.id === openedQuickProductId)
+      : quickProducts
   const productIds = useMemo(() => visibleProducts.map((product) => product.id), [visibleProducts])
 
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -161,11 +166,28 @@ export function PharmacyDashboard() {
           return next
         })
         setQuickProducts((current) => current.filter((item) => item.id !== product.id))
+        setOpenedQuickProductId((current) => current === product.id ? null : current)
       } else {
         await addProductToQuickList(pharmacyId, product.id)
         setQuickIds((current) => new Set(current).add(product.id))
         setMessage('تمت إضافة الصنف إلى القائمة السريعة.')
       }
+    } catch (err) {
+      setError(getAuthMessage(err))
+    }
+  }
+
+  async function openQuickListProduct(productId: string) {
+    setError('')
+    setMessage('')
+
+    try {
+      const offerMap = await searchProvider.loadOffers([productId])
+      setQuickProducts((current) =>
+        current.map((product) => product.id === productId
+          ? { ...product, offers: offerMap[product.id] ?? [] }
+          : product))
+      setOpenedQuickProductId(productId)
     } catch (err) {
       setError(getAuthMessage(err))
     }
@@ -177,7 +199,7 @@ export function PharmacyDashboard() {
     setMessage('')
 
     try {
-      const bestOffers = quickProducts.flatMap((product) => product.offers[0] ?? [])
+      const bestOffers = quickProducts.flatMap((product) => product.offers.find((offer) => offer.isAvailable) ?? [])
       await Promise.all(bestOffers.map((offer) => addOfferToCart(pharmacyId, offer.id, 1)))
       setMessage(`تمت إضافة ${bestOffers.length} عرض من القائمة السريعة إلى السلة.`)
     } catch (err) {
@@ -213,6 +235,19 @@ export function PharmacyDashboard() {
             أضف الكل للسلة
           </Button>
         </div>
+        {quickProducts.length > 0 ? (
+          <div className="quick-list-items">
+            <Button onClick={() => setOpenedQuickProductId(null)} type="button" variant="ghost">
+              عرض الكل
+            </Button>
+            {quickProducts.map((product) => (
+              <Button key={product.id} onClick={() => void openQuickListProduct(product.id)} type="button" variant="ghost">
+                <Eye size={16} />
+                {product.canonicalName}
+              </Button>
+            ))}
+          </div>
+        ) : null}
       </Card>
 
       {error ? <p className="form-error">{error}</p> : null}
@@ -290,7 +325,7 @@ function ProductResultCard({
         </div>
         <Button onClick={() => void onToggleQuickList(product)} type="button" variant={isQuickListed ? 'secondary' : 'ghost'}>
           <Star size={18} />
-          {isQuickListed ? 'في القائمة' : 'أضف للقائمة'}
+          {isQuickListed ? 'إزالة من القائمة' : 'أضف للقائمة'}
         </Button>
       </div>
 
@@ -298,7 +333,11 @@ function ProductResultCard({
         {product.offers.length === 0 ? (
           <p className="muted-line">لا توجد عروض متاحة حاليا.</p>
         ) : (
-          product.offers.map((offer) => {
+          <>
+            {!product.offers.some((offer) => offer.isAvailable) ? (
+              <p className="muted-line">لا توجد عروض متاحة حاليا لهذا الصنف.</p>
+            ) : null}
+            {product.offers.map((offer) => {
             const freshness = freshnessLabel(offer.warehouseLastPriceUpdate)
             const quantity = quantities[offer.id] ?? 1
 
@@ -324,6 +363,8 @@ function ProductResultCard({
                 <div className="cart-controls">
                   <input
                     aria-label="الكمية"
+                    disabled={!offer.isAvailable}
+                    max={offer.stock}
                     min="1"
                     onChange={(event) => onQuantityChange(offer.id, Math.max(1, Number(event.target.value)))}
                     type="number"
@@ -336,7 +377,8 @@ function ProductResultCard({
                 </div>
               </div>
             )
-          })
+            })}
+          </>
         )}
       </div>
     </Card>

@@ -556,6 +556,13 @@ button {
   color: var(--color-text);
 }
 
+.quick-list-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
 .muted-line {
   color: var(--color-muted);
   margin: 0;
