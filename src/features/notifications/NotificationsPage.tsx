@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Button, Card } from '../../components'
 import { supabase } from '../../lib/supabase'
 import { getAuthMessage } from '../auth/authService'
+import { statusLabels } from '../orders/orderService'
 import {
   loadNotifications,
   markAllNotificationsRead,
@@ -100,10 +101,28 @@ export function NotificationsPage() {
         {items.map((item) => (
           <Card className={item.read_at ? 'notification-row' : 'notification-row unread'} key={item.id}>
             <div>
-              <strong>{item.message}</strong>
+              {item.order ? (
+                <>
+                  <strong>{item.order.orderCode} | {item.order.subOrderCode}</strong>
+                  <p>{item.message}</p>
+                </>
+              ) : (
+                <strong>{item.message}</strong>
+              )}
               <p>{formatDate(item.created_at)}</p>
             </div>
-            {item.read_at ? (
+            {item.order ? (
+              <div className="notification-actions">
+                <span className={`order-status status-${item.order.status}`}>
+                  {statusLabels[item.order.status]}
+                </span>
+                {!item.read_at ? (
+                  <Button onClick={() => void handleRead(item.id)} type="button" variant="ghost">
+                    تم
+                  </Button>
+                ) : null}
+              </div>
+            ) : item.read_at ? (
               <span className="status-pill">مقروء</span>
             ) : (
               <Button onClick={() => void handleRead(item.id)} type="button" variant="ghost">

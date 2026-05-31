@@ -57,10 +57,10 @@ button {
     linear-gradient(315deg, rgb(224 168 74 / 16%), transparent 42%),
     var(--color-paper);
   display: grid;
-  gap: var(--space-10);
+  gap: var(--space-8);
   grid-template-columns: minmax(280px, 0.8fr) minmax(360px, 1fr);
   min-height: 100svh;
-  padding: clamp(var(--space-6), 5vw, var(--space-18));
+  padding: clamp(var(--space-6), 5vw, var(--space-16));
 }
 
 .auth-brand {
@@ -119,11 +119,11 @@ button {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  padding: clamp(var(--space-5), 3vw, var(--space-8));
+  padding: clamp(var(--space-4), 3vw, var(--space-7));
 }
 
 .form-heading {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .form-heading h1,
@@ -318,10 +318,10 @@ button {
 
 .dashboard-page {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--space-6);
   margin: 0 auto;
   max-width: 1120px;
-  padding: clamp(var(--space-7), 5vw, var(--space-16));
+  padding: clamp(var(--space-6), 5vw, var(--space-14));
   width: 100%;
 }
 
@@ -811,6 +811,17 @@ button {
   white-space: nowrap;
 }
 
+.status-pending {
+  background: var(--color-border);
+  color: var(--color-muted);
+}
+
+.status-accepted,
+.status-preparing {
+  background: var(--color-teal-50);
+  color: var(--color-teal);
+}
+
 .status-cancelled,
 .status-rejected {
   background: rgb(180 35 24 / 10%);
@@ -1059,6 +1070,13 @@ button {
 .notification-row p {
   color: var(--color-muted);
   margin: var(--space-1-5) 0 0;
+}
+
+.notification-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 /* ── App Shell ──────────────────────────────────────────────────────────── */
