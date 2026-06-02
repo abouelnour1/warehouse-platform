@@ -20,7 +20,18 @@
       "PowerShell($env:JAVA_HOME = \"C:\\\\Program Files\\\\Eclipse Adoptium\\\\jdk-25.0.2.10-hotspot\"; Set-Location \"D:\\\\worehouse\\\\android\"; .\\\\gradlew assembleDebug 2>&1 | Select-String -Pattern \"BUILD|FAILED|error:\" | Select-Object -Last 3)",
       "Bash(Get-ChildItem -Path \"D:\\\\worehouse\" -Force)",
       "Bash(Select-Object Name, FullName)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\worehouse\\\\src\" -Recurse | Select-Object FullName, PSIsContainer | Sort-Object FullName | Select-Object @{N='Path';E={$_.FullName.Replace\\('D:\\\\worehouse\\\\src\\\\', ''\\)}}, PSIsContainer)",
+      "PowerShell(Get-ChildItem -Path \"D:\\\\worehouse\\\\src\\\\components\" -Recurse | Where-Object { $_.Extension -in @\\('.tsx', '.ts', '.css'\\) } | Select-Object FullName)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(npx vite *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5174)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s http://localhost:5174)",
+      "Bash(npm install *)",
+      "Bash(Remove-Item -Force \"D:\\\\worehouse\\\\screenshot.mjs\",\"D:\\\\worehouse\\\\screenshot2.mjs\",\"D:\\\\worehouse\\\\public\\\\test-layout.html\" -ErrorAction SilentlyContinue)",
+      "Bash(Write-Output \"cleaned\")"
     ]
   }
 }

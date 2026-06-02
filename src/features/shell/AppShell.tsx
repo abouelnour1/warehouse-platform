@@ -114,53 +114,104 @@ export function AppShell() {
 
   return (
     <div className="shell">
-      {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="shell-header">
-        <div className="shell-identity">
+      {/* ── Sidebar (desktop only, CSS-controlled) ──────────── */}
+      <aside className="shell-sidebar">
+        <div className="sidebar-identity">
           <span className="shell-name">{displayName}</span>
           <span className="shell-role">{roleLabel(role, warehouseStatus)}</span>
         </div>
 
-        <div className="shell-actions">
-          <NavLink aria-label="التنبيهات" className="shell-bell" to="/notifications">
-            <Bell size={22} />
+        <nav aria-label="التنقل الرئيسي" className="sidebar-nav">
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.path}
+              className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
+              end={tab.end}
+              to={tab.path}
+            >
+              <tab.icon size={20} />
+              <span>{tab.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <NavLink
+            aria-label="التنبيهات"
+            className={({ isActive }) => `sidebar-action-btn${isActive ? ' active' : ''}`}
+            to="/notifications"
+          >
+            <Bell size={20} />
             {unreadCount > 0 && (
               <span className="shell-bell-count" aria-label={`${unreadCount} تنبيه غير مقروء`}>
                 {unreadCount}
               </span>
             )}
+            <span>التنبيهات</span>
           </NavLink>
 
           <button
             aria-label="تسجيل الخروج"
-            className="shell-bell"
+            className="sidebar-action-btn"
             onClick={() => void signOut()}
             type="button"
           >
             <LogOut size={20} />
+            <span>خروج</span>
           </button>
         </div>
-      </header>
+      </aside>
 
-      {/* ── Page content ────────────────────────────────────────── */}
-      <main className="shell-content">
-        <Outlet />
-      </main>
+      {/* ── Shell body ──────────────────────────────────────── */}
+      <div className="shell-body">
+        {/* ── Header (mobile only, CSS-controlled) ─────────── */}
+        <header className="shell-header">
+          <div className="shell-identity">
+            <span className="shell-name">{displayName}</span>
+            <span className="shell-role">{roleLabel(role, warehouseStatus)}</span>
+          </div>
 
-      {/* ── Bottom tab bar ──────────────────────────────────────── */}
-      <nav aria-label="التنقل الرئيسي" className="bottom-tabs">
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.path}
-            className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}
-            end={tab.end}
-            to={tab.path}
-          >
-            <tab.icon size={22} />
-            <span>{tab.label}</span>
-          </NavLink>
-        ))}
-      </nav>
+          <div className="shell-actions">
+            <NavLink aria-label="التنبيهات" className="shell-bell" to="/notifications">
+              <Bell size={22} />
+              {unreadCount > 0 && (
+                <span className="shell-bell-count" aria-label={`${unreadCount} تنبيه غير مقروء`}>
+                  {unreadCount}
+                </span>
+              )}
+            </NavLink>
+
+            <button
+              aria-label="تسجيل الخروج"
+              className="shell-bell"
+              onClick={() => void signOut()}
+              type="button"
+            >
+              <LogOut size={20} />
+            </button>
+          </div>
+        </header>
+
+        {/* ── Page content ─────────────────────────────────── */}
+        <main className="shell-content">
+          <Outlet />
+        </main>
+
+        {/* ── Bottom tab bar (mobile only, CSS-controlled) ──── */}
+        <nav aria-label="التنقل الرئيسي" className="bottom-tabs">
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.path}
+              className={({ isActive }) => `tab-btn${isActive ? ' active' : ''}`}
+              end={tab.end}
+              to={tab.path}
+            >
+              <tab.icon size={22} />
+              <span>{tab.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+      </div>
     </div>
   )
 }
