@@ -29,6 +29,7 @@ export interface ProductResult {
 
 export interface SearchProvider {
   search(query: string): Promise<ProductResult[]>
+  suggest(query: string): Promise<ProductResult[]>
   loadOffers(productIds: string[]): Promise<Record<string, ProductOffer[]>>
 }
 
@@ -71,6 +72,38 @@ export function effectivePrice(offer: ProductOffer): number {
 }
 
 export class SupabaseSearchProvider implements SearchProvider {
+  private static mapRow(row: SearchProductRow, offers: ProductOffer[] = []): ProductResult {
+    return {
+      id: row.id,
+      productCode: row.product_code,
+      canonicalName: row.canonical_name,
+      normalizedKey: row.normalized_key,
+      brand: row.brand,
+      strength: row.strength,
+      form: row.form,
+      packSize: row.pack_size,
+      offers,
+    }
+  }
+
+  async suggest(query: string): Promise<ProductResult[]> {
+    const trimmed = query.trim()
+    if (!trimmed) return []
+
+    const parsed = parseName(trimmed)
+    const searchText = [trimmed, parsed.base].filter(Boolean).join(' ')
+
+    const { data, error } = await supabase.rpc('search_products', {
+      search_query: searchText,
+      result_limit: 8,
+    })
+    if (error) throw error
+
+    return ((data ?? []) as SearchProductRow[]).map((row) =>
+      SupabaseSearchProvider.mapRow(row),
+    )
+  }
+
   async search(query: string): Promise<ProductResult[]> {
     const trimmed = query.trim()
     if (trimmed.length < 2) return []
@@ -88,17 +121,9 @@ export class SupabaseSearchProvider implements SearchProvider {
     const products = (data ?? []) as SearchProductRow[]
     const offerMap = await this.loadOffers(products.map((product) => product.id))
 
-    return products.map((product) => ({
-      id: product.id,
-      productCode: product.product_code,
-      canonicalName: product.canonical_name,
-      normalizedKey: product.normalized_key,
-      brand: product.brand,
-      strength: product.strength,
-      form: product.form,
-      packSize: product.pack_size,
-      offers: offerMap[product.id] ?? [],
-    }))
+    return products.map((product) =>
+      SupabaseSearchProvider.mapRow(product, offerMap[product.id] ?? []),
+    )
   }
 
   async loadOffers(productIds: string[]): Promise<Record<string, ProductOffer[]>> {

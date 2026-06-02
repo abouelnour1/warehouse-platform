@@ -525,6 +525,12 @@ button {
   gap: var(--space-4-5);
 }
 
+/* ── Search box + dropdown wrapper ───────────────────────────────────────── */
+
+.search-box-wrap {
+  position: relative;
+}
+
 .search-box {
   align-items: center;
   background: var(--color-surface);
@@ -534,6 +540,12 @@ button {
   gap: var(--space-3);
   min-height: 58px;
   padding: 0 var(--space-4);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.search-box:focus-within {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 4px rgb(0 106 96 / 10%);
 }
 
 .search-box svg {
@@ -549,6 +561,169 @@ button {
   font-size: var(--text-base);
   min-width: 0;
   outline: 0;
+}
+
+/* Hide browser-native clear button for type=search */
+.search-box input[type="search"]::-webkit-search-cancel-button {
+  display: none;
+}
+
+.search-clear {
+  align-items: center;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  padding: var(--space-1);
+  transition: color var(--transition-base);
+}
+
+.search-clear:hover {
+  color: var(--color-text);
+}
+
+.search-spinner {
+  animation: spin 0.75s linear infinite;
+  color: var(--color-muted);
+  flex: 0 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Suggestions dropdown ─────────────────────────────────────────────────── */
+
+.search-dropdown {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 16px 40px rgb(24 35 31 / 12%);
+  inset-inline: 0;
+  margin-top: var(--space-1-5);
+  max-height: 380px;
+  overflow-y: auto;
+  position: absolute;
+  top: 100%;
+  z-index: 30;
+}
+
+.search-section {
+  padding-block: var(--space-2);
+}
+
+.search-section + .search-section {
+  border-top: 1px solid var(--color-border);
+}
+
+.search-section-label {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  gap: var(--space-1-5);
+  padding: var(--space-1) var(--space-4) var(--space-2);
+  text-transform: uppercase;
+}
+
+.search-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-2);
+}
+
+.search-suggestion {
+  align-items: center;
+  display: flex;
+  gap: var(--space-1);
+}
+
+.suggestion-btn {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font: inherit;
+  font-size: var(--text-sm);
+  gap: var(--space-3);
+  min-block-size: 40px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-2);
+  text-align: start;
+  transition: background var(--transition-base);
+}
+
+.suggestion-btn:hover {
+  background: var(--color-teal-50);
+}
+
+.suggestion-btn > svg {
+  color: var(--color-muted);
+  flex: 0 0 auto;
+}
+
+.suggestion-content {
+  display: grid;
+  min-width: 0;
+}
+
+.suggestion-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.suggestion-meta {
+  color: var(--color-muted);
+  display: block;
+  font-size: var(--text-xs);
+  margin-top: var(--space-0-5);
+}
+
+.suggestion-remove {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  min-block-size: 28px;
+  min-inline-size: 28px;
+  padding: var(--space-1);
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.suggestion-remove:hover {
+  background: rgb(180 35 24 / 10%);
+  color: var(--color-danger);
+}
+
+.search-highlight {
+  background: rgb(224 168 74 / 35%);
+  border-radius: 2px;
+  color: inherit;
+  font-style: normal;
+}
+
+.search-dropdown-status {
+  align-items: center;
+  color: var(--color-muted);
+  display: flex;
+  font-size: var(--text-sm);
+  gap: var(--space-2);
+  justify-content: center;
+  padding: var(--space-4);
 }
 
 .quick-list-bar {

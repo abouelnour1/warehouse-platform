@@ -52,6 +52,30 @@ export async function loadQuickListProductIds(pharmacyId: string): Promise<Set<s
   return new Set((data ?? []).map((row) => row.product_id as string))
 }
 
+export async function loadRecentlyOrderedNames(pharmacyId: string): Promise<string[]> {
+  interface RecentOrderRow {
+    sub_orders: Array<{ order_items: Array<{ product_name: string }> }> | null
+  }
+
+  const { data, error } = await supabase
+    .from('orders')
+    .select('sub_orders(order_items(product_name))')
+    .eq('pharmacy_id', pharmacyId)
+    .order('created_at', { ascending: false })
+    .limit(5)
+    .returns<RecentOrderRow[]>()
+
+  if (error || !data) return []
+
+  const names = data.flatMap((order) =>
+    (order.sub_orders ?? []).flatMap((so) =>
+      (so.order_items ?? []).map((item) => item.product_name),
+    ),
+  )
+
+  return [...new Set(names)].slice(0, 8)
+}
+
 export async function loadQuickListProducts(pharmacyId: string): Promise<ProductResult[]> {
   const { data, error } = await supabase
     .from('quick_list')
