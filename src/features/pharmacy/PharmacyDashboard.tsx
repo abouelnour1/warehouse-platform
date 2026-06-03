@@ -1,13 +1,19 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
+  Check,
   Clock3,
+  Droplets,
   Eye,
   Loader2,
   Package,
   PackagePlus,
+  Pill,
   Search,
   ShoppingCart,
   Star,
+  Syringe,
+  TrendingDown,
+  Trophy,
   X,
 } from 'lucide-react'
 import {
@@ -19,7 +25,7 @@ import {
   type KeyboardEvent,
 } from 'react'
 
-import { Button, Card } from '../../components'
+import { Button, Card, QtyStepper } from '../../components'
 import { supabase } from '../../lib/supabase'
 import { getAuthMessage } from '../auth/authService'
 import { useAuth } from '../auth/useAuth'
@@ -145,7 +151,7 @@ export function PharmacyDashboard() {
   const rowVirtualizer = useVirtualizer({
     count: visibleProducts.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 280,
+    estimateSize: () => 420,
     overscan: 4,
   })
 
@@ -560,6 +566,12 @@ export function PharmacyDashboard() {
 
 // ── ProductResultCard ─────────────────────────────────────────────────────────
 
+const FORM_ICON: Record<string, typeof Pill> = {
+  syr: Droplets,
+  inj: Syringe,
+  amp: Syringe,
+}
+
 interface ProductResultCardProps {
   isQuickListed: boolean
   onAddToCart: (offer: ProductOffer) => Promise<void>
@@ -577,83 +589,148 @@ function ProductResultCard({
   product,
   quantities,
 }: ProductResultCardProps) {
+  const [justAdded, setJustAdded] = useState<string | null>(null)
+
+  const available   = product.offers.filter((o) => o.isAvailable)
+  const prices      = available.map((o) => effectivePrice(o))
+  const lowestPrice = prices.length > 0 ? Math.min(...prices) : null
+  const topPrice    = prices.length > 0 ? Math.max(...prices) : null
+  const spread      = lowestPrice !== null && topPrice !== null ? topPrice - lowestPrice : 0
+  const bestId      = available[0]?.id ?? null
+
+  const ProductIcon = FORM_ICON[product.form ?? ''] ?? Pill
+
+  async function handleAdd(offer: ProductOffer) {
+    await onAddToCart(offer)
+    setJustAdded(offer.id)
+    window.setTimeout(
+      () => setJustAdded((cur) => (cur === offer.id ? null : cur)),
+      2000,
+    )
+  }
+
   return (
-    <Card className="product-result-card">
-      <div className="product-result-head">
-        <div>
-          <p className="eyebrow">{product.productCode}</p>
-          <h2>{product.canonicalName}</h2>
-          <p>{[product.strength, product.form, product.packSize].filter(Boolean).join(' • ')}</p>
+    <div className="card product-card">
+      {/* ── Product header ────────────────────────────────── */}
+      <div className="product-card-header">
+        <div className="product-card-title-group">
+          <div className="product-card-icon">
+            <ProductIcon size={20} />
+          </div>
+          <div className="product-card-info">
+            <p className="eyebrow">{product.productCode}</p>
+            <h2 className="product-card-name">{product.canonicalName}</h2>
+            {(product.brand ?? product.strength ?? product.form ?? product.packSize) && (
+              <p className="product-card-meta">
+                {[product.brand, product.strength, product.form, product.packSize]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </p>
+            )}
+          </div>
         </div>
         <Button
           onClick={() => void onToggleQuickList(product)}
           type="button"
           variant={isQuickListed ? 'secondary' : 'ghost'}
         >
-          <Star size={18} />
-          {isQuickListed ? 'إزالة من القائمة' : 'أضف للقائمة'}
+          <Star size={16} />
+          {isQuickListed ? 'محفوظ' : 'حفظ'}
         </Button>
       </div>
 
-      <div className="offers-list">
+      {/* ── Price spread ─────────────────────────────────── */}
+      {available.length >= 2 && spread > 0 && (
+        <div className="price-spread">
+          <TrendingDown size={14} />
+          <span className="price-spread-range">
+            من {formatMoney(lowestPrice!)} إلى {formatMoney(topPrice!)}
+          </span>
+          <span className="price-spread-savings">وفّر حتى {formatMoney(spread)}</span>
+        </div>
+      )}
+
+      {/* ── Offer list ───────────────────────────────────── */}
+      <div className="offer-list">
         {product.offers.length === 0 ? (
-          <p className="muted-line">لا توجد عروض متاحة حاليا.</p>
+          <p className="muted-line">لا توجد عروض متاحة حالياً.</p>
         ) : (
-          <>
-            {!product.offers.some((o) => o.isAvailable) && (
-              <p className="muted-line">لا توجد عروض متاحة حاليا لهذا الصنف.</p>
-            )}
-            {product.offers.map((offer) => {
-              const freshness = freshnessLabel(offer.warehouseLastPriceUpdate)
-              const quantity  = quantities[offer.id] ?? 1
-              return (
-                <div className="offer-row" key={offer.id}>
-                  <div>
-                    <strong>{offer.warehouseName}</strong>
-                    <p>{offer.warehouseRawName}</p>
-                  </div>
-                  <div>
-                    <strong>{formatMoney(effectivePrice(offer))}</strong>
-                    {offer.discountPct > 0
-                      ? <p>خصم {offer.discountPct}% من {formatMoney(offer.price)}</p>
-                      : <p>بدون خصم</p>}
-                  </div>
-                  <div>
-                    <span className={offer.isAvailable ? 'availability available' : 'availability unavailable'}>
-                      {offer.isAvailable ? `متاح: ${offer.stock}` : 'غير متاح'}
+          product.offers.map((offer) => {
+            const price    = effectivePrice(offer)
+            const fresh    = freshnessLabel(offer.warehouseLastPriceUpdate)
+            const qty      = quantities[offer.id] ?? 1
+            const isBest   = offer.id === bestId
+            const wasAdded = justAdded === offer.id
+
+            return (
+              <div
+                key={offer.id}
+                className={[
+                  'offer-item',
+                  isBest             && 'is-best',
+                  !offer.isAvailable && 'is-unavailable',
+                ].filter(Boolean).join(' ')}
+              >
+                {/* Warehouse */}
+                <div className="offer-warehouse">
+                  {isBest && (
+                    <span className="best-price-badge">
+                      <Trophy size={11} />
+                      الأفضل سعراً
                     </span>
-                    <span className={freshness.stale ? 'freshness stale' : 'freshness'}>
-                      <Clock3 size={14} />
-                      {freshness.text}
-                    </span>
-                  </div>
-                  <div className="cart-controls">
-                    <input
-                      aria-label="الكمية"
-                      disabled={!offer.isAvailable}
-                      max={offer.stock}
-                      min="1"
-                      onChange={(e) =>
-                        onQuantityChange(offer.id, Math.max(1, Number(e.target.value)))
-                      }
-                      type="number"
-                      value={quantity}
-                    />
-                    <Button
-                      disabled={!offer.isAvailable}
-                      onClick={() => void onAddToCart(offer)}
-                      type="button"
-                    >
-                      <ShoppingCart size={18} />
-                      أضف
-                    </Button>
-                  </div>
+                  )}
+                  <strong className="offer-warehouse-name">{offer.warehouseName}</strong>
+                  {offer.warehouseRawName !== offer.warehouseName && (
+                    <p className="offer-warehouse-raw">{offer.warehouseRawName}</p>
+                  )}
                 </div>
-              )
-            })}
-          </>
+
+                {/* Price */}
+                <div className="offer-price-col">
+                  <strong className="offer-price">{formatMoney(price)}</strong>
+                  {offer.discountPct > 0 && (
+                    <div className="offer-price-badges">
+                      <span className="offer-discount-badge">−{offer.discountPct}٪</span>
+                      <span className="offer-original-price">{formatMoney(offer.price)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Availability + freshness */}
+                <div className="offer-status-col">
+                  <span className={offer.isAvailable ? 'availability available' : 'availability unavailable'}>
+                    {offer.isAvailable ? `متاح · ${offer.stock}` : 'غير متاح'}
+                  </span>
+                  <span className={fresh.stale ? 'freshness stale' : 'freshness'}>
+                    <Clock3 size={12} />
+                    {fresh.text}
+                  </span>
+                </div>
+
+                {/* Cart controls */}
+                <div className="offer-cart-col">
+                  <QtyStepper
+                    disabled={!offer.isAvailable}
+                    max={offer.stock}
+                    onChange={(v) => onQuantityChange(offer.id, v)}
+                    value={qty}
+                  />
+                  <Button
+                    className="offer-add-btn"
+                    disabled={!offer.isAvailable}
+                    onClick={() => void handleAdd(offer)}
+                    type="button"
+                    variant={wasAdded ? 'secondary' : 'primary'}
+                  >
+                    {wasAdded ? <Check size={16} /> : <ShoppingCart size={16} />}
+                    {wasAdded ? 'تمت الإضافة' : 'أضف'}
+                  </Button>
+                </div>
+              </div>
+            )
+          })
         )}
       </div>
-    </Card>
+    </div>
   )
 }

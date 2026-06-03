@@ -19,6 +19,7 @@ import { supabase } from '../../lib/supabase'
 import type { UserRole, WarehouseStatus } from '../../types'
 import { loadUnreadNotificationCount } from '../notifications/notificationService'
 import { useAuth } from '../auth/useAuth'
+import { useCartSummary } from '../pharmacy/useCartSummary'
 
 // ---------------------------------------------------------------------------
 // Tab definitions
@@ -29,11 +30,12 @@ interface TabDef {
   path: string
   icon: ComponentType<{ size?: number }>
   end?: boolean
+  showCartBadge?: boolean
 }
 
 const PHARMACY_TABS: TabDef[] = [
-  { label: 'البحث',  path: '/app',    icon: Search       },
-  { label: 'السلة',  path: '/cart',   icon: ShoppingCart },
+  { label: 'البحث',  path: '/app',    icon: Search,       end: true },
+  { label: 'السلة',  path: '/cart',   icon: ShoppingCart, showCartBadge: true },
   { label: 'طلباتي', path: '/orders', icon: Package      },
   { label: 'حسابي',  path: '/profile', icon: UserRound   },
 ]
@@ -73,6 +75,14 @@ function roleLabel(role: UserRole | null, status: WarehouseStatus | null): strin
   return ''
 }
 
+function fmtCartTotal(n: number): string {
+  return new Intl.NumberFormat('ar-EG', {
+    style: 'currency',
+    currency: 'EGP',
+    maximumFractionDigits: 0,
+  }).format(n)
+}
+
 // ---------------------------------------------------------------------------
 // Shell
 // ---------------------------------------------------------------------------
@@ -80,6 +90,7 @@ function roleLabel(role: UserRole | null, status: WarehouseStatus | null): strin
 export function AppShell() {
   const { role, warehouseStatus, profile, account, signOut } = useAuth()
   const [unreadCount, setUnreadCount] = useState(0)
+  const cart = useCartSummary()
 
   // Organisation name > personal name
   const displayName =
@@ -129,8 +140,20 @@ export function AppShell() {
               end={tab.end}
               to={tab.path}
             >
-              <tab.icon size={20} />
+              {tab.showCartBadge ? (
+                <span className="tab-icon-wrap">
+                  <ShoppingCart size={20} />
+                  {cart.count > 0 && (
+                    <span className="cart-badge">{cart.count > 99 ? '٩٩+' : cart.count}</span>
+                  )}
+                </span>
+              ) : (
+                <tab.icon size={20} />
+              )}
               <span>{tab.label}</span>
+              {tab.showCartBadge && cart.total > 0 && (
+                <span className="sidebar-cart-total">{fmtCartTotal(cart.total)}</span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -181,6 +204,16 @@ export function AppShell() {
               )}
             </NavLink>
 
+            {/* Persistent cart button in mobile header (pharmacy only) */}
+            {role === 'pharmacy' && (
+              <NavLink aria-label="السلة" className="shell-bell" to="/cart">
+                <ShoppingCart size={20} />
+                {cart.count > 0 && (
+                  <span className="shell-bell-count">{cart.count > 99 ? '٩٩+' : cart.count}</span>
+                )}
+              </NavLink>
+            )}
+
             <button
               aria-label="تسجيل الخروج"
               className="shell-bell"
@@ -206,7 +239,16 @@ export function AppShell() {
               end={tab.end}
               to={tab.path}
             >
-              <tab.icon size={22} />
+              {tab.showCartBadge ? (
+                <span className="tab-icon-wrap">
+                  <ShoppingCart size={22} />
+                  {cart.count > 0 && (
+                    <span className="cart-badge">{cart.count > 99 ? '٩٩+' : cart.count}</span>
+                  )}
+                </span>
+              ) : (
+                <tab.icon size={22} />
+              )}
               <span>{tab.label}</span>
             </NavLink>
           ))}
